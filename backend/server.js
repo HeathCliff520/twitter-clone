@@ -1,12 +1,12 @@
 import path from "path";
-import express from "express";
+import express from "express"; //后端服务器
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { v2 as cloudinary } from "cloudinary";
 
-import authRoutes from "./routes/auth.route.js";
-import userRoutes from "./routes/user.route.js";
-import postRoutes from "./routes/post.route.js";
+import authRoutes from "./routes/auth.route.js"; //权限路由express.Router();
+import userRoutes from "./routes/user.route.js"; //用户路由express.Router();
+import postRoutes from "./routes/post.route.js"; //表单路由express.Router();
 import notificationRoutes from "./routes/notification.route.js";
 
 import connectMongoDB from "./db/connectMongoDB.js";
@@ -29,6 +29,7 @@ app.use(express.urlencoded({ extended: true })); // to parse form data(urlencode
 
 app.use(cookieParser());
 
+// sever->router->controller->model
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);

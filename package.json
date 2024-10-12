@@ -10,6 +10,7 @@
 	},
 	"keywords": [],
 	"author": "",
+	"typecomment":"项目引入模块的方式",
 	"type": "module",
 	"license": "ISC",
 	"dependencies": {
