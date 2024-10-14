@@ -4,6 +4,8 @@ import { followUnfollowUser, getSuggestedUsers, getUserProfile, updateUser } fro
 
 const router = express.Router();
 
+
+//:username 表示是一个动态参数
 router.get("/profile/:username", protectRoute, getUserProfile);
 router.get("/suggested", protectRoute, getSuggestedUsers);
 router.post("/follow/:id", protectRoute, followUnfollowUser);

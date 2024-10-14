@@ -23,7 +23,7 @@ export const protectRoute = async (req, res, next) => {
 		}
 
 		req.user = user;
-		next();//跳转到下一个中间件
+		next();//跳转到下一个中间件(下一个函数)
 	} catch (err) {
 		console.log("Error in protectRoute middleware", err.message);
 		return res.status(500).json({ error: "Internal Server Error" });
