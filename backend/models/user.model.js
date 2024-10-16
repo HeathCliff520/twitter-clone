@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema(
 		likedPosts: [
 			{
 				type: mongoose.Schema.Types.ObjectId,
-				ref: "Post",
+				ref: "Post",//类型Id要在post集合中找，即依赖post集合
 				default: [],
 			},
 		],

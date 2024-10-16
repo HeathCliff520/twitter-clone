@@ -89,22 +89,22 @@ export const commentOnPost = async (req, res) => {
 
 export const likeUnlikePost = async (req, res) => {
 	try {
-		const userId = req.user._id;
-		const { id: postId } = req.params;
+		const userId = req.user._id;//当前用户
+		const { id: postId } = req.params;//路径参数id
 
-		const post = await Post.findById(postId);
+		const post = await Post.findById(postId);//发文id
 
 		if (!post) {
 			return res.status(404).json({ error: "Post not found" });
 		}
 
-		const userLikedPost = post.likes.includes(userId);
-
+		const userLikedPost = post.likes.includes(userId);//返回当前用户喜欢的post
+		//用户喜欢情况下，取消喜欢
 		if (userLikedPost) {
-			// Unlike post
-			await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
-			await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
-
+			// Unlike post，相互移除
+			await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });//从该post中剔除该用户
+			await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });//从该用户中剔除该post
+			//当前用户取消喜欢，过滤掉该用户不喜欢的post，并返回用户喜欢的post
 			const updatedLikes = post.likes.filter((id) => id.toString() !== userId.toString());
 			res.status(200).json(updatedLikes);
 		} else {
@@ -160,12 +160,12 @@ export const getLikedPosts = async (req, res) => {
 		const user = await User.findById(userId);
 		if (!user) return res.status(404).json({ error: "User not found" });
 
-		const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
-			.populate({
+		const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })//仅查找用户喜欢的post数组里的postid并返回该集合
+			.populate({//在这些post中插入用户信息
 				path: "user",
 				select: "-password",
 			})
-			.populate({
+			.populate({//在这些post中插入评论的用户信息
 				path: "comments.user",
 				select: "-password",
 			});
@@ -183,8 +183,8 @@ export const getFollowingPosts = async (req, res) => {
 		const user = await User.findById(userId);
 		if (!user) return res.status(404).json({ error: "User not found" });
 
-		const following = user.following;
-
+		const following = user.following;//following数组
+		//查出所有订阅用户所发的post
 		const feedPosts = await Post.find({ user: { $in: following } })
 			.sort({ createdAt: -1 })
 			.populate({
@@ -203,19 +203,55 @@ export const getFollowingPosts = async (req, res) => {
 	}
 };
 
-export const getUserPosts = async (req, res) => {
+export const getUserPosts = async (req, res) => {//某一用户所发的所有post
 	try {
 		const { username } = req.params;
 
 		const user = await User.findOne({ username });
 		if (!user) return res.status(404).json({ error: "User not found" });
-
+	/**
+	 * 注意：Post.find({ user: user._id }).sort().populate()下.select("-password")不起作用
+	 * 要注意这里的过滤写法
+	 * populate：在查询post文档时会将user文档信息插入到post文档中，user是被引用的文档
+	 * populate前，即引用前(未填充)：
+	 * {
+		"_id": "postId123",
+		"title": "My First Blog Post",
+		"content": "This is the content of the post.",
+		"user": "userId123",   // 这是一个对 User 文档的引用
+		"comments": ["commentId1", "commentId2"]  // 对 Comment 文档的引用
+		}
+	* populate后，即引用后(未填充)：
+	 {
+		"_id": "postId123",
+		"title": "My First Blog Post",
+		"content": "This is the content of the post.",
+		"user": {
+			"_id": "userId123",
+			"name": "John Doe",    // 填充的用户信息
+			"email": "john@example.com"
+		},
+		"comments": [
+			{
+			"_id": "commentId1",
+			"text": "Great post!",
+			"user": "anotherUserId"
+			},
+			{
+			"_id": "commentId2",
+			"text": "Thanks for sharing!"
+			}
+		]
+	}
+	 */
 		const posts = await Post.find({ user: user._id })
 			.sort({ createdAt: -1 })
+			//在post中插入用户信息
 			.populate({
 				path: "user",
 				select: "-password",
 			})
+			//在post中插入评论信息
 			.populate({
 				path: "comments.user",
 				select: "-password",
